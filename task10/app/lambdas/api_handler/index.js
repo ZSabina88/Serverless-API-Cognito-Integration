@@ -33,32 +33,42 @@ exports.handler = async (event) => {
 };
 
 async function handleSignUp(event) {
-  const { firstName, lastName, email, password } = JSON.parse(event.body);
-
-  const params = {
-    UserPoolId: USER_POOL_ID,
-    Username: email,
-    TemporaryPassword: password,
-    UserAttributes: [{ Name: "email", Value: email }],
-    MessageAction: "SUPPRESS",
-  };
-
-  try {
-    await cognito.adminCreateUser(params).promise();
-
-    const passwordParams = {
-      Password: password,
+    const { firstName, lastName, email, password } = JSON.parse(event.body);
+  
+    const listUsersParams = {
       UserPoolId: USER_POOL_ID,
-      Username: email,
-      Permanent: true,
+      Filter: `email = "${email}"`,
     };
-    await cognito.adminSetUserPassword(passwordParams).promise();
-    return createResponse(200, { message: "User created successfully" });
-  } catch (error) {
-    console.error(error);
-    return createResponse(400, { message: error.message });
+  
+    try {
+      const existingUsers = await cognito.listUsers(listUsersParams).promise();
+      if (existingUsers.Users.length > 0) {
+        return createResponse(200, { message: "User already exists" });
+      }
+  
+      const params = {
+        UserPoolId: USER_POOL_ID,
+        Username: email,
+        TemporaryPassword: password,
+        UserAttributes: [{ Name: "email", Value: email }],
+        MessageAction: "SUPPRESS",
+      };
+  
+      await cognito.adminCreateUser(params).promise();
+  
+      const passwordParams = {
+        Password: password,
+        UserPoolId: USER_POOL_ID,
+        Username: email,
+        Permanent: true,
+      };
+      await cognito.adminSetUserPassword(passwordParams).promise();
+      return createResponse(200, { message: "User created successfully" });
+    } catch (error) {
+      console.error(error);
+      return createResponse(400, { message: error.message });
+    }
   }
-}
 
 async function handleSignIn(event) {
   const { email, password } = JSON.parse(event.body);
