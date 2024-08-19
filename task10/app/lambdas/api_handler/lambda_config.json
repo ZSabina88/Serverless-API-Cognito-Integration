@@ -17,12 +17,12 @@
   "event_sources": [],
   "env_variables": {
     "cognito_id": {
-      "resource_name": "${booking_userpool}",
+      "resource_name": "simple-booking-userpool",
       "resource_type": "cognito_idp",
       "parameter": "id"
     },
     "cognito_client_id": {
-      "resource_name": "${booking_userpool}",
+      "resource_name": "simple-booking-userpool",
       "resource_type": "cognito_idp",
       "parameter": "client_id"
     },
